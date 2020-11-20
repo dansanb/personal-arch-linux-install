@@ -13,10 +13,10 @@ USERNAME=testuser
 USERPASSWORD=testuser
 
 # size of EFI partition
-EFISIZE=300M+
+EFISIZE=+300M
 
 # size of SWAP partition
-SWAPSIZE=600M+
+SWAPSIZE=+600M
 
 # timezone
 TIMEZONE=America/Los_Angeles
@@ -56,11 +56,11 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${INSTALLDRIVE}
   n # new partition (EFI partition)
   1 # partition number 1
     # default - start at beginning of disk 
-  ${EFISIZE} # EFI boot parttion
+  $EFISIZE # EFI boot parttion
   n # new partition (SWAP partition)
   2 # partion number 2
     # default, start immediately after preceding partition
-  ${SWAPSIZE} # Linux Swap
+  $SWAPSIZE # Linux Swap
   n # new partition (Linux Root Partition)
   3 # partion number 3
     # default, start immediately after preceding partition
@@ -82,7 +82,7 @@ EOF
 # format /prepare partitions
 
 # FAT32 is recommended for UEFI partition
-mkfs.FAT -F32 ${INSTALLDRIVE}1
+mkfs.fat -F32 ${INSTALLDRIVE}1
 
 # initialize Swap 
 mkswap ${INSTALLDRIVE}2
