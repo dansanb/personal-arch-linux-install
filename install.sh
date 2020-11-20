@@ -127,7 +127,7 @@ arch-chroot /mnt printf "${HOSTNAME}" > /etc/hostname
 arch-chroot /mnt printf "127.0.0.1   localhost\n::1     localhost\n127.0.1.1   ${HOSTNAME}.localdomain  ${HOSTNAME}" >> etc/hosts
 
 # set root password
-arch-chroot /mnt echo "${ROOTPASSWORD}" | passwd --stdin root
+arch-chroot /mnt echo -c $ROOTPASSWORD | passwd 
 
 # install microcode (so that grub picks it up)
 arch-chroot /mnt pacman -S ${MICROCODE}
