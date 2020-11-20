@@ -105,37 +105,37 @@ pacstrap /mnt base linux linux-firmware
 genfstab -U /mnt >> /mnt/etc/fstab
 
 # chroot into new system to configure it
-arch-chroot /mnt
+# arch-chroot /mnt
 
 # set timezone
-ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
+arch-chroot /mnt ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
 
 # generate /etc/adjtime
-hwclock --systohc
+arch-chroot /mnt hwclock --systohc
 
 # set locale to en_US.UTF-8 UTF-8
-sed -i '/^#en_US.UTF-8 UTF-8 /s/^#//'/etc/locale.gen
-locale-gen
+arch-chroot /mnt sed -i '/^#en_US.UTF-8 UTF-8 /s/^#//'/etc/locale.gen
+arch-chroot /mnt locale-gen
 
 # /etc/locale.conf
-printf "LANG=en_US.UTF-8" > /etc/locale.conf
+arch-chroot /mnt printf "LANG=en_US.UTF-8" > /etc/locale.conf
 
 # /etc/hostname
-printf "${HOSTNAME}" > /etc/hostname
+arch-chroot /mnt printf "${HOSTNAME}" > /etc/hostname
 
 #  /etc/hosts
-printf "127.0.0.1   localhost\n::1     localhost\n127.0.1.1   ${HOSTNAME}.localdomain  ${HOSTNAME}" >> etc/hosts
+arch-chroot /mnt printf "127.0.0.1   localhost\n::1     localhost\n127.0.1.1   ${HOSTNAME}.localdomain  ${HOSTNAME}" >> etc/hosts
 
 # set root password
-echo "${ROOTPASSWORD}" | passwd --stdin root
+arch-chroot /mnt echo "${ROOTPASSWORD}" | passwd --stdin root
 
 # install microcode (so that grub picks it up)
-pacman -S ${MICROCODE}
+arch-chroot /mnt pacman -S ${MICROCODE}
 
 # install / configure grub
-pacman -S grub efibootmgr
-grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
-grub-mkconfig -o /boot/grub/grub.cfg 
+arch-chroot /mnt pacman -S grub efibootmgr
+arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
+arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg 
 
 # install packages
 
@@ -144,5 +144,5 @@ grub-mkconfig -o /boot/grub/grub.cfg
 # set bridge networking
 
 # exit and reboot
-exit
+arch-chroot /mnt exit
 reboot
