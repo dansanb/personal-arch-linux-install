@@ -18,7 +18,7 @@ EFISIZE=+300M
 # size of SWAP partition
 SWAPSIZE=+600M
 
-# timezone
+#fcm timezone
 TIMEZONE=America/Los_Angeles
 
 # hostname
@@ -35,7 +35,7 @@ MICROCODE=amd-ucode
 timedatectl set-ntp true
 
 # wipe partition-table and partitions of install drive
-wipefs -a ${INSTALLDRIVE}
+wipefs -a -f ${INSTALLDRIVE}
 
 # create partition table and partitions on install drive. This  creates:
 #  /dev/xxx1 => EFI partition
@@ -108,17 +108,17 @@ genfstab -U /mnt >> /mnt/etc/fstab
 # arch-chroot /mnt
 
 # set timezone
-arch-chroot /mnt ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
+echo -e "ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime" | arch-chroot /mnt
 
 # generate /etc/adjtime
-arch-chroot /mnt hwclock --systohc
+echo -e "hwclock --systohc" | arch-chroot /mnt
 
 # set locale to en_US.UTF-8 UTF-8
-arch-chroot /mnt sed -i '/^#en_US.UTF-8 UTF-8 /s/^#//'/etc/locale.gen
-arch-chroot /mnt locale-gen
+echo -e "sed -i '/^#en_US.UTF-8 UTF-8 /s/^#//' /etc/locale.gen" | arch-chroot /mnt
+echo -e "locale-gen" | arch-chroot /mnt
 
 # /etc/locale.conf
-arch-chroot /mnt printf "LANG=en_US.UTF-8" > /etc/locale.conf
+echo - "printf 'LANG=en_US.UTF-8' > /etc/locale.conf" | arch-chroot /mnt
 
 # /etc/hostname
 arch-chroot /mnt printf "${HOSTNAME}" > /etc/hostname
@@ -145,4 +145,4 @@ arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 
 # exit and reboot
 arch-chroot /mnt exit
-reboot
+# reboot
