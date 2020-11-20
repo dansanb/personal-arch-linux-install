@@ -5,13 +5,43 @@
 # drive to use
 INSTALLDRIVE=/dev/vda
 
+# root password
+ROOTPASSWORD=root
+
+# user to create automatically
+USERNAME=testuser
+USERPASSWORD=testuser
+
+# size of EFI partition
+EFISIZE=300M+
+
+# size of SWAP partition
+SWAPSIZE=600M+
+
+# timezone
+TIMEZONE=America/Los_Angeles
+
+# hostname
+HOSTNAME=arch
+
+# microcode package install 
+# for amd-powered computers: amd-ucode
+# for intel-powered computers: intel-ucode
+MICROCODE=amd-ucode
 
 ########## END OPTIONS ########## 
 
+# update system clock
+timedatectl set-ntp true
 
-# wipe partition-table and partitions
+# wipe partition-table and partitions of install drive
 wipefs -a ${INSTALLDRIVE}
 
+# create partition table and partitions on install drive. This  creates:
+#  /dev/xxx1 => EFI partition
+#  /dev/xxx2 => SWAP partition
+#  /dev/xxx3 => Linux Root (x86-64) partition
+# 
 # taken from:
 # https://superuser.com/questions/332252/how-to-create-and-format-a-partition-using-a-bash-script
 # 
@@ -26,11 +56,11 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${INSTALLDRIVE}
   n # new partition (EFI partition)
   1 # partition number 1
     # default - start at beginning of disk 
-  +300M # 300 MB boot parttion
+  ${EFISIZE} # EFI boot parttion
   n # new partition (SWAP partition)
   2 # partion number 2
     # default, start immediately after preceding partition
-  +600M # 600 MB Linux Swap
+  ${SWAPSIZE} # Linux Swap
   n # new partition (Linux Root Partition)
   3 # partion number 3
     # default, start immediately after preceding partition
@@ -48,3 +78,71 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${INSTALLDRIVE}
   q # and we're done
 EOF
 
+
+# format /prepare partitions
+
+# FAT32 is recommended for UEFI partition
+mkfs.FAT -F32 ${INSTALLDRIVE}1
+
+# initialize Swap 
+mkswap ${INSTALLDRIVE}2
+
+# format linux root partition
+mkfs.ext4 ${INSTALLDRIVE}3
+
+# mount partitions
+mount ${INSTALLDRIVE}3 /mnt
+mkdir /mnt/efi
+mount ${INSTALLDRIVE}1 /mnt/efi
+
+#enable swap
+swapon ${INSTALLDRIVE}2
+
+#install essential packages
+pacstrap /mnt base linux linux-firmware
+
+# generate fstab
+genfstab -U /mnt >> /mnt/etc/fstab
+
+# chroot into new system to configure it
+arch-chroot /mnt
+
+# set timezone
+ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime
+
+# generate /etc/adjtime
+hwclock --systohc
+
+# set locale to en_US.UTF-8 UTF-8
+sed -i '/^#en_US.UTF-8 UTF-8 /s/^#//'/etc/locale.gen
+locale-gen
+
+# /etc/locale.conf
+printf "LANG=en_US.UTF-8" > /etc/locale.conf
+
+# /etc/hostname
+printf "${HOSTNAME}" > /etc/hostname
+
+#  /etc/hosts
+printf "127.0.0.1   localhost\n::1     localhost\n127.0.1.1   ${HOSTNAME}.localdomain  ${HOSTNAME}" >> etc/hosts
+
+# set root password
+echo "${ROOTPASSWORD}" | passwd --stdin root
+
+# install microcode (so that grub picks it up)
+pacman -S ${MICROCODE}
+
+# install / configure grub
+pacman -S grub efibootmgr
+grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
+grub-mkconfig -o /boot/grub/grub.cfg 
+
+# install packages
+
+# enable services
+
+# set bridge networking
+
+# exit and reboot
+exit
+reboot
