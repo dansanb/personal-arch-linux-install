@@ -21,7 +21,7 @@
 ```
     chmod +x install.sh
     ./install.sh
-
+```
 ## After Install
 After the script is finished, 2 things remain:
 1. edit /etc/fstab to mount additional drives / network points
