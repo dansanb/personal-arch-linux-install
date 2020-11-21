@@ -35,7 +35,10 @@ MICROCODE=amd-ucode
 timedatectl set-ntp true
 
 # wipe partition-table and partitions of install drive
-wipefs -a -f ${INSTALLDRIVE}
+wipefs -a -f $INSTALLDRIVE
+
+# have kernel reload partition table for the drive
+partprove $INSTALLDRIVE
 
 # create partition table and partitions on install drive. This  creates:
 #  /dev/xxx1 => EFI partition
